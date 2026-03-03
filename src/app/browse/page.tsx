@@ -169,6 +169,19 @@ export default function BrowseCandidatesPage() {
                             )}
                         </button>
                     </div>
+                    {/* Always-visible search bar */}
+                    <div className="pb-3">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search candidate name, district, or party..."
+                                value={searchQuery}
+                                onChange={e => { setSearchQuery(e.target.value); setPage(1) }}
+                                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 text-gray-900 placeholder:text-gray-400"
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -206,23 +219,11 @@ export default function BrowseCandidatesPage() {
                 </div>
             )}
 
-            {/* Filters Panel */}
+            {/* Advanced Filters Panel */}
             {showFilters && (
                 <div className="bg-white border-b border-gray-200 shadow-sm">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                            {/* Search */}
-                            <div className="relative lg:col-span-2">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search by name, district, party..."
-                                    value={searchQuery}
-                                    onChange={e => { setSearchQuery(e.target.value); setPage(1) }}
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                                />
-                            </div>
-
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             {/* Province Filter */}
                             <select
                                 value={selectedProvince}
@@ -246,30 +247,32 @@ export default function BrowseCandidatesPage() {
                                     <option key={d} value={d}>{d}</option>
                                 ))}
                             </select>
-                        </div>
 
-                        {/* Party Filter + Clear */}
-                        <div className="mt-3 flex gap-3">
+                            {/* Party Filter */}
                             <select
                                 value={selectedParty}
                                 onChange={e => { setSelectedParty(e.target.value); setPage(1) }}
-                                className="flex-1 px-3 py-2.5 rounded-lg border border-gray-300 text-sm bg-white text-gray-900 focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm bg-white text-gray-900 focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="">All Parties</option>
                                 {data?.filters.parties.map(p => (
                                     <option key={p} value={p}>{p}</option>
                                 ))}
                             </select>
-                            {hasActiveFilters && (
+                        </div>
+
+                        {/* Clear */}
+                        {hasActiveFilters && (
+                            <div className="mt-3 text-right">
                                 <button
                                     onClick={clearFilters}
-                                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition"
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition"
                                 >
                                     <X className="w-4 h-4" />
-                                    Clear
+                                    Clear All Filters
                                 </button>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

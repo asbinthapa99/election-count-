@@ -41,10 +41,21 @@ const PARTY_INFO: Record<string, { color: string; abbr: string; nameEn: string }
     'जनमत पार्टी': { color: '#00695C', abbr: 'JMP', nameEn: 'Janamat Party' },
 }
 
-function getPartyInfo(name: string) {
-    for (const [key, info] of Object.entries(PARTY_INFO)) {
-        if (name === key || name.includes(key.split(' ')[0])) return info
+// Normalize party name to a canonical key for deduplication
+function normalizePartyName(name: string): string {
+    for (const key of Object.keys(PARTY_INFO)) {
+        if (name === key) return key
     }
+    // Fuzzy: check if the name contains a known key (or vice versa)
+    for (const key of Object.keys(PARTY_INFO)) {
+        if (name.includes(key) || key.includes(name)) return key
+    }
+    return name
+}
+
+function getPartyInfo(name: string) {
+    const canonical = normalizePartyName(name)
+    if (PARTY_INFO[canonical]) return PARTY_INFO[canonical]
     return { color: '#6B7280', abbr: name.length > 8 ? name.substring(0, 6) + '…' : name, nameEn: name }
 }
 
@@ -142,7 +153,7 @@ export default function HomePage() {
                 const constKeys = new Set(all.map(c => `${c.DistrictName}-${c.ConstName}`))
                 setTotalConstituencies(constKeys.size)
 
-                // Party aggregates
+                // Party aggregates — use normalized party names to avoid duplicates
                 const partyMap = new Map<string, { votes: number; candidates: number; leadingIn: Set<string>; topName: string; topVotes: number }>()
                 const constGrouped = new Map<string, ECCandidate[]>()
 
@@ -151,21 +162,24 @@ export default function HomePage() {
                     if (!constGrouped.has(key)) constGrouped.set(key, [])
                     constGrouped.get(key)!.push(c)
 
-                    const p = partyMap.get(c.PoliticalPartyName) || { votes: 0, candidates: 0, leadingIn: new Set<string>(), topName: '', topVotes: 0 }
+                    // Use canonical party name to merge variants
+                    const canonicalParty = normalizePartyName(c.PoliticalPartyName)
+                    const p = partyMap.get(canonicalParty) || { votes: 0, candidates: 0, leadingIn: new Set<string>(), topName: '', topVotes: 0 }
                     p.votes += c.TotalVoteReceived
                     p.candidates++
                     if (c.TotalVoteReceived > p.topVotes) {
                         p.topVotes = c.TotalVoteReceived
                         p.topName = c.CandidateName
                     }
-                    partyMap.set(c.PoliticalPartyName, p)
+                    partyMap.set(canonicalParty, p)
                 }
 
                 // Find leading party in each constituency
                 for (const [key, candidates] of constGrouped) {
                     const sorted = [...candidates].sort((a, b) => b.TotalVoteReceived - a.TotalVoteReceived)
                     if (sorted[0] && sorted[0].TotalVoteReceived > 0) {
-                        const leading = partyMap.get(sorted[0].PoliticalPartyName)
+                        const canonicalLeader = normalizePartyName(sorted[0].PoliticalPartyName)
+                        const leading = partyMap.get(canonicalLeader)
                         if (leading) leading.leadingIn.add(key)
                     }
                 }

@@ -270,9 +270,9 @@ export default function KeyRacesPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+        <div className="min-h-screen bg-gradient-to-b from-emerald-50/50 to-white">
             {/* Hero */}
-            <div className="bg-gradient-to-br from-red-600 via-orange-600 to-yellow-500 text-white">
+            <div className="bg-gradient-to-br from-emerald-700 via-green-600 to-teal-500 text-white">
                 <div className="container-app py-14 text-center">
                     <h1 className="text-4xl md:text-5xl font-bold mb-3">⚔️ Key Races 2082</h1>
                     <p className="text-white/80 text-lg max-w-2xl mx-auto">
@@ -294,7 +294,7 @@ export default function KeyRacesPage() {
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
                         <div className="flex flex-col items-center gap-3">
-                            <div className="w-10 h-10 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin" />
+                            <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
                             <p className="text-sm text-gray-500">Fetching live data from Election Commission...</p>
                         </div>
                     </div>
@@ -307,7 +307,7 @@ export default function KeyRacesPage() {
                                 placeholder="Search races by district or description..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition transition-shadow"
+                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition"
                             />
                             <svg className="w-5 h-5 absolute left-3.5 top-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -543,7 +543,7 @@ export default function KeyRacesPage() {
                 <div className="mt-8 text-center">
                     <Link
                         href="/browse"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition font-medium shadow-lg shadow-orange-200"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition font-medium shadow-lg shadow-emerald-200"
                     >
                         <Users className="w-5 h-5" />
                         Browse All 3,400+ Candidates
