@@ -24,6 +24,9 @@ import {
 } from 'lucide-react'
 import { ELECTION_DATE, MAJORITY_SEATS, partyLeaders, pmHistory, provinces } from '@/lib/sample-data'
 import { formatNumber } from '@/lib/utils'
+import dynamic from 'next/dynamic'
+
+const ParticleBackground = dynamic(() => import('@/components/ParticleBackground'), { ssr: false })
 
 // ── Party color + info mapping ──
 const PARTY_INFO: Record<string, { color: string; abbr: string; nameEn: string }> = {
@@ -287,9 +290,11 @@ export default function HomePage() {
     return (
         <div className="animate-fade-in">
             {/* ===== Countdown / Live Banner ===== */}
-            <section className="relative overflow-hidden border-b border-surface-200 dark:border-surface-800">
+            <section className="relative overflow-hidden border-b border-surface-200 dark:border-surface-800" style={{ minHeight: '340px' }}>
+                {/* 3D Particle Background */}
+                <ParticleBackground />
                 <div className="absolute inset-0 bg-gradient-to-b from-brand-500/5 to-transparent dark:from-brand-500/10" />
-                <div className="relative container-app py-12 md:py-16 text-center">
+                <div className="relative container-app py-12 md:py-16 text-center z-10">
                     <p className="text-xs font-bold uppercase tracking-[0.3em] text-red-500 mb-4">
                         🇳🇵 Nepal Election 2082
                     </p>
