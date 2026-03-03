@@ -127,11 +127,12 @@ export default function ConstituenciesPage() {
     const filtered = allConstituencies.filter(c => {
         if (selectedProvince !== 'All Provinces' && c.province !== selectedProvince) return false
         if (selectedDistrict !== 'All Districts' && c.district !== selectedDistrict) return false
-        if (search) {
-            const q = search.toLowerCase()
+        if (search.trim()) {
+            const q = search.trim().toLowerCase()
             return (
                 c.district.toLowerCase().includes(q) ||
                 c.province.toLowerCase().includes(q) ||
+                (`${c.district}-${c.constNumber}`).toLowerCase().includes(q) ||
                 c.candidates.some(cand => cand.name.toLowerCase().includes(q) || cand.party.toLowerCase().includes(q))
             )
         }
@@ -229,7 +230,7 @@ export default function ConstituenciesPage() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                         <input
                             type="text"
-                            placeholder="Search constituency or candidate…"
+                            placeholder="Search constituency, candidate, or party…"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white text-sm backdrop-blur placeholder:text-white/40 focus:ring-2 focus:ring-red-500 focus:border-red-500"
