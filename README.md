@@ -1,190 +1,67 @@
-# 🇳🇵 Nepal Election Pulse
+# 🇳🇵 NepalPulse 2082 (Election Count)
 
-A **production-ready, premium-quality full-stack web application** for live Nepal election tracking, public predictions, and real-time discussion — built with Next.js 15, Supabase, and TypeScript.
+NepalPulse 2082 is a real-time, high-performance web dashboard for tracking the Nepal Federal Elections. Designed for mobile-first user experience and optimized for high traffic, it provides live vote counts, interactive constituency maps, head-to-head candidate matchups, and community features.
 
-![Nepal Election Pulse](https://img.shields.io/badge/Status-Live-brightgreen) ![Next.js](https://img.shields.io/badge/Next.js-15-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue) ![Supabase](https://img.shields.io/badge/Supabase-Realtime-green)
+## 🌟 Key Features
 
----
+*   **⚡ Real-time Vote Tracking:** Pulls live data directly from the official Election Commission (`result.election.gov.np`) using a heavily cached, Stale-While-Revalidate (SWR) background syncing architecture.
+*   **📱 Mobile-Optimized UI/UX:** Features a sleek, app-like mobile experience with safe-area padding, bottom tab bar navigation, Apple Web App integration, and touch-optimized interactions.
+*   **⚔️ Key Races Dashboard:** Pinned head-to-head matchups for major constituencies (e.g., KP Oli vs Balen Shah in Jhapa-5, Aashika Tamang vs Rajendra Prasad Pandey in Dhading-1).
+*   **🔍 High-Performance Search:** Fast, case-insensitive text search using PostgreSQL `pg_trgm` GIN indexes to instantly filter 3,400+ candidates across 165 constituencies.
+*   **💬 Anonymous Community:** Interactive mock voting and threaded comment sections (integrated via Supabase).
 
-## ✨ Features
+## 🛠 Tech Stack
 
-- **📊 Live Election Dashboard** — Real-time verified results with interactive charts, party rankings, and vote share donut chart
-- **🗳️ Anonymous Predictions** — Cast one prediction per device, no login needed. Results aggregate live across all users
-- **💬 Real-Time Discussion** — Supabase Realtime-powered anonymous forum with official reply badges
-- **🛡️ Anti-Abuse Protection** — Server-side rate limiting (15s), duplicate detection, UUID validation, one-vote-per-device
-- **🌙 Dark/Light Mode** — Automatic system detection with manual toggle
-- **📱 Fully Responsive** — Premium UI across all screen sizes
-- **🔒 No Login Required** — Fully anonymous with device-level UUID identity
-
----
-
-## 🏗️ Tech Stack
-
-| Layer | Technology |
-|---|---|
-| **Frontend** | Next.js 15 (App Router), React 19, TypeScript |
-| **Styling** | Tailwind CSS 4 |
-| **Data Fetching** | TanStack Query (React Query) |
-| **Charts** | Recharts |
-| **Database** | Supabase (PostgreSQL) |
-| **Realtime** | Supabase Realtime (postgres_changes) |
-| **Icons** | Lucide React |
-| **Identity** | Anonymous UUID (localStorage + cookie backup) |
-
----
-
-## 📁 Project Structure
-
-```
-election/
-├── src/
-│   ├── app/
-│   │   ├── page.tsx                    # Home page (hero + dashboard preview)
-│   │   ├── layout.tsx                  # Root layout with providers
-│   │   ├── elections/
-│   │   │   ├── page.tsx                # Elections listing
-│   │   │   └── [id]/page.tsx           # Election dashboard (charts + table)
-│   │   ├── predictions/page.tsx        # Anonymous voting
-│   │   ├── discussion/page.tsx         # Live forum with Realtime
-│   │   ├── about/page.tsx              # About + data sources
-│   │   └── api/
-│   │       ├── elections/route.ts      # GET elections
-│   │       ├── elections/[id]/route.ts # GET election + results
-│   │       ├── parties/route.ts        # GET parties
-│   │       ├── predictions/route.ts    # GET/POST predictions
-│   │       ├── comments/route.ts       # GET/POST comments
-│   │       └── comments/like/route.ts  # POST like toggle
-│   ├── components/
-│   │   ├── Navbar.tsx                  # Glassmorphic navigation
-│   │   ├── Footer.tsx                  # Site footer
-│   │   ├── ThemeProvider.tsx           # Dark/light mode
-│   │   └── QueryProvider.tsx           # TanStack Query wrapper
-│   ├── hooks/
-│   │   └── use-data.ts                 # All data fetching hooks
-│   └── lib/
-│       ├── supabase.ts                 # Supabase client (browser + server)
-│       ├── anon-id.ts                  # Anonymous identity system
-│       ├── utils.ts                    # Formatting utilities
-│       └── sample-data.ts             # Fallback sample data
-├── supabase/
-│   ├── schema.sql                      # Database schema (7 tables + RLS)
-│   └── seed.sql                        # Sample data
-├── public/
-│   └── favicon.svg                     # Brand icon
-├── tailwind.config.ts
-├── next.config.mjs
-└── package.json
-```
-
----
+*   **Frontend:** Next.js (App Router), React 18, Tailwind CSS, Lucide React
+*   **Backend:** Next.js API Routes (Node.js)
+*   **Database:** Supabase (PostgreSQL with Row Level Security and Realtime Pub/Sub)
+*   **Caching Strategy:** In-memory caching + HTTP Stale-While-Revalidate for EC API protection under high load.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- A [Supabase](https://supabase.com) project
+*   Node.js (v18+)
+*   npm or pnpm
+*   A Supabase project
 
-### 1. Install Dependencies
+### Installation
 
-```bash
-npm install
-```
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/asbinthapa99/election-count-.git
+    cd election-count-
+    ```
 
-### 2. Set Up Database
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    # or
+    pnpm install
+    ```
 
-Open your Supabase SQL Editor and run these files in order:
+3.  **Environment Variables:**
+    Create a `.env.local` file in the root directory and add your Supabase credentials:
+    ```env
+    NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+    NEXT_PUBLIC_SITE_URL=http://localhost:3000
+    ```
 
-1. **Schema**: Copy and run `supabase/schema.sql`
-2. **Seed data**: Copy and run `supabase/seed.sql`
+4.  **Database Setup:**
+    Open your Supabase SQL Editor and run the entire contents of the `/supabase/full_setup.sql` file. This will safely reset the schema, configure RLS, set up performance indexes, and seed the initial 165 constituencies.
 
-### 3. Configure Environment
+5.  **Run the development server:**
+    ```bash
+    npm run dev
+    # or
+    pnpm dev
+    ```
+    Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-The app defaults to the built-in Supabase project. To use your own:
+## ⚙️ Architecture & Scale Optimization
 
-```bash
-# Create .env.local
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-```
+To ensure the website remains fast and stable during election day traffic spikes without overwhelming the government's origin servers:
 
-### 4. Run Development Server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view the app.
-
-> **Note:** The app works immediately even without setting up Supabase — it falls back to realistic sample data.
-
----
-
-## 📡 API Routes
-
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/elections` | GET | List all elections |
-| `/api/elections/[id]` | GET | Election details + party results + computed stats |
-| `/api/parties` | GET | All political parties |
-| `/api/predictions` | GET | Aggregated prediction counts per party |
-| `/api/predictions` | POST | Submit anonymous prediction (one per device) |
-| `/api/comments` | GET | Paginated comments with replies |
-| `/api/comments` | POST | Post comment (rate limited, duplicate checked) |
-| `/api/comments/like` | POST | Toggle like/unlike on a comment |
-
----
-
-## 🗄️ Database Schema
-
-| Table | Purpose |
-|---|---|
-| `elections` | Election metadata (type, status, constituency counts) |
-| `parties` | Political party info (name, color, abbreviation) |
-| `party_results` | Votes & seats per party per election |
-| `predictions` | Anonymous prediction votes |
-| `comments` | Discussion messages with threading support |
-| `comment_likes` | Like tracking per anonymous user |
-| `results_snapshots` | Cached external data |
-
-All tables have **Row Level Security** enabled with public read + anonymous insert policies.
-
----
-
-## 🔐 Security & Anti-Abuse
-
-- **Anonymous Identity**: UUID generated per device, stored in localStorage + cookie backup
-- **One Vote Per Device**: Enforced by database unique constraint (`election_id + anon_id`)
-- **Rate Limiting**: Server-side 15-second cooldown between comments
-- **Duplicate Detection**: Same content from same user blocked within 5 minutes
-- **Input Validation**: UUID format check, content length limits (2–500 chars)
-- **RLS Policies**: Row Level Security on all tables
-
----
-
-## 🎨 Design System
-
-Inspired by Apple dashboards, Stripe analytics, and Bloomberg election coverage:
-
-- **Typography**: Inter font family
-- **Colors**: Custom brand blue palette with semantic surface tokens
-- **Components**: Glassmorphic nav, elevated cards, smooth progress bars
-- **Animations**: Fade-in, slide-up, pulse effects
-- **Dark Mode**: System-aware with manual toggle
-
----
-
-## 📜 License
-
-MIT
-
----
-
-## 🙏 Credits
-
-- Election data sourced from [Election Commission Nepal](https://election.gov.np)
-- Built with [Next.js](https://nextjs.org), [Supabase](https://supabase.com), [Recharts](https://recharts.org), [Lucide](https://lucide.dev)
-
----
-
-> **Disclaimer**: This platform aggregates election data from verified sources. Always refer to the Election Commission Nepal for official confirmation.
+*   **API Route (`/api/candidates/ec`):** Acts as a proxy and cache. It hits the EC JSON dumps, caches them in memory, and returns them to the user. If the cache is stale, it serves the stale data immediately while triggering a background fetch to the EC.
+*   **Build & Rendering:** Pages are heavily optimized, pre-fetching data securely and avoiding unnecessary React hydration re-renders.
