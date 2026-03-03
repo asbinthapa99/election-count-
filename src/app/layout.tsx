@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Navbar } from '@/components/Navbar'
@@ -15,6 +15,21 @@ export const metadata: Metadata = {
     title: 'Nepal Election Pulse',
     description: 'Real-time verified election results, public predictions, and live discussions for Nepal\'s democratic process.',
     keywords: ['Nepal', 'election', 'results', 'voting', 'politics', 'democracy'],
+    appleWebApp: {
+        capable: true,
+        statusBarStyle: 'black-translucent',
+        title: 'NepalPulse',
+    },
+}
+
+export const viewport: Viewport = {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+    themeColor: [
+        { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+        { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+    ],
 }
 
 export default function RootLayout({

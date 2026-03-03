@@ -46,13 +46,15 @@ export default function PredictionsPage() {
     }
 
     const getPartyPercent = (partyId: string) => {
-        if (!predictionData?.counts || totalVotes === 0) return '0.0'
-        const count = predictionData.counts[partyId]?.count || 0
+        const counts = predictionData?.counts as Record<string, any> | undefined
+        if (!counts || totalVotes === 0) return '0.0'
+        const count = counts[partyId]?.count || 0
         return ((count / totalVotes) * 100).toFixed(1)
     }
 
     const getPartyVotes = (partyId: string) => {
-        return predictionData?.counts?.[partyId]?.count || 0
+        const counts = predictionData?.counts as Record<string, any> | undefined
+        return counts?.[partyId]?.count || 0
     }
 
     return (
@@ -65,7 +67,7 @@ export default function PredictionsPage() {
                             <span className="badge badge-upcoming">Public Poll</span>
                         </div>
                         <h1 className="text-3xl md:text-4xl font-extrabold mb-3">
-                            Who will win the 2024 Federal Election?
+                            Who will win the 2082 Federal Election?
                         </h1>
                         <p className="text-surface-500 dark:text-surface-400 text-lg">
                             Cast your prediction anonymously. One vote per device. See live community predictions.
@@ -100,10 +102,10 @@ export default function PredictionsPage() {
                                     onClick={() => !hasVoted && setSelectedParty(party.id)}
                                     disabled={hasVoted}
                                     className={`card p-5 text-left transition-all duration-200 relative overflow-hidden ${selectedParty === party.id
-                                            ? 'ring-2 ring-brand-500 border-brand-500 dark:border-brand-500'
-                                            : hasVoted
-                                                ? 'opacity-80'
-                                                : 'hover:border-surface-300 dark:hover:border-surface-600 cursor-pointer'
+                                        ? 'ring-2 ring-brand-500 border-brand-500 dark:border-brand-500'
+                                        : hasVoted
+                                            ? 'opacity-80'
+                                            : 'hover:border-surface-300 dark:hover:border-surface-600 cursor-pointer'
                                         }`}
                                 >
                                     {selectedParty === party.id && (

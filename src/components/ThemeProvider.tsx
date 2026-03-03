@@ -8,7 +8,7 @@ const ThemeContext = createContext<{
     theme: Theme
     toggleTheme: () => void
 }>({
-    theme: 'dark',
+    theme: 'light',
     toggleTheme: () => { },
 })
 
@@ -17,17 +17,16 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-    const [theme, setTheme] = useState<Theme>('dark')
+    const [theme, setTheme] = useState<Theme>('light')
     const [mounted, setMounted] = useState(false)
 
     useEffect(() => {
         setMounted(true)
         const stored = localStorage.getItem('nepal_pulse_theme') as Theme
-        if (stored) {
+        if (stored === 'dark' || stored === 'light') {
             setTheme(stored)
-        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            setTheme('dark')
         }
+        // Default is always light — don't follow system preference
     }, [])
 
     useEffect(() => {
@@ -46,7 +45,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
 
     if (!mounted) {
-        return <html lang="en" className="dark"><body>{children}</body></html>
+        // SSR: render without dark class (light default)
+        return (
+            <ThemeContext.Provider value={{ theme: 'light', toggleTheme }}>
+                {children}
+            </ThemeContext.Provider>
+        )
     }
 
     return (

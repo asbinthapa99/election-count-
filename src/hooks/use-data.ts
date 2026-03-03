@@ -2,61 +2,85 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
-// --- Elections ---
+// Crash-proof fetch wrapper
+async function safeFetch<T>(url: string, fallback: T): Promise<T> {
+    try {
+        const res = await fetch(url)
+        if (!res.ok) return fallback
+        const data = await res.json()
+        return data as T
+    } catch {
+        return fallback
+    }
+}
 
+// --- Elections ---
 export function useElections() {
-    return useQuery({
+    return useQuery<any[]>({
         queryKey: ['elections'],
-        queryFn: async () => {
-            const res = await fetch('/api/elections')
-            if (!res.ok) return null
-            return res.json()
-        },
-        staleTime: 30_000, // 30s
-        retry: 1,
+        queryFn: () => safeFetch('/api/elections', [] as any[]),
+        staleTime: 30_000,
+        retry: 2,
+        retryDelay: 3000,
     })
 }
 
 export function useElection(id: string) {
-    return useQuery({
+    return useQuery<any>({
         queryKey: ['election', id],
-        queryFn: async () => {
-            const res = await fetch(`/api/elections/${id}`)
-            if (!res.ok) return null
-            return res.json()
-        },
+        queryFn: () => safeFetch(`/api/elections/${id}`, null as any),
         staleTime: 15_000,
-        refetchInterval: 30_000, // Auto-refresh every 30s for live results
-        retry: 1,
+        refetchInterval: 30_000,
+        retry: 2,
     })
 }
 
 // --- Parties ---
-
 export function useParties() {
     return useQuery({
         queryKey: ['parties'],
-        queryFn: async () => {
-            const res = await fetch('/api/parties')
-            if (!res.ok) return null
-            return res.json()
-        },
+        queryFn: () => safeFetch('/api/parties', []),
         staleTime: 60_000,
+        retry: 2,
+    })
+}
+
+// --- Constituencies ---
+export function useConstituencies(params?: { province?: string; district?: string; search?: string; page?: number }) {
+    const p = new URLSearchParams()
+    if (params?.province) p.set('province', params.province)
+    if (params?.district) p.set('district', params.district)
+    if (params?.search) p.set('search', params.search)
+    if (params?.page) p.set('page', String(params.page))
+
+    return useQuery({
+        queryKey: ['constituencies', params],
+        queryFn: () => safeFetch(`/api/constituencies?${p}`, { constituencies: [], total: 0, page: 1, limit: 15, totalPages: 0 }),
+        staleTime: 15_000,
+        refetchInterval: 30_000,
+        retry: 2,
+    })
+}
+
+// --- Scraper / Live Data ---
+export function useLiveData() {
+    return useQuery<any>({
+        queryKey: ['live-data'],
+        queryFn: () => safeFetch('/api/scraper', { status: 'waiting', parties: [] as any[], totalConstituencies: 0, countedConstituencies: 0 }),
+        staleTime: 30_000,
+        refetchInterval: 60_000,
         retry: 1,
     })
 }
 
 // --- Predictions ---
-
 export function usePredictions(electionId: string, anonId: string) {
     return useQuery({
         queryKey: ['predictions', electionId, anonId],
         queryFn: async () => {
             const params = new URLSearchParams({ election_id: electionId })
             if (anonId) params.set('anon_id', anonId)
-            const res = await fetch(`/api/predictions?${params}`)
-            if (!res.ok) return null
-            return res.json()
+            return safeFetch(`/api/predictions?${params}`, { counts: {}, totalVotes: 0, userVote: null })
         },
         staleTime: 10_000,
         retry: 1,
@@ -65,7 +89,6 @@ export function usePredictions(electionId: string, anonId: string) {
 
 export function useSubmitPrediction() {
     const queryClient = useQueryClient()
-
     return useMutation({
         mutationFn: async (data: { election_id: string; party_id: string; anon_id: string }) => {
             const res = await fetch('/api/predictions', {
@@ -74,7 +97,7 @@ export function useSubmitPrediction() {
                 body: JSON.stringify(data),
             })
             if (!res.ok) {
-                const err = await res.json()
+                const err = await res.json().catch(() => ({ error: 'Failed' }))
                 throw new Error(err.error || 'Failed to submit prediction')
             }
             return res.json()
@@ -86,7 +109,6 @@ export function useSubmitPrediction() {
 }
 
 // --- Comments ---
-
 export function useComments(electionId?: string) {
     return useQuery({
         queryKey: ['comments', electionId],
@@ -94,38 +116,30 @@ export function useComments(electionId?: string) {
             const params = new URLSearchParams()
             if (electionId) params.set('election_id', electionId)
             params.set('limit', '50')
-            const res = await fetch(`/api/comments?${params}`)
-            if (!res.ok) return null
-            return res.json()
+            return safeFetch(`/api/comments?${params}`, { comments: [], total: 0 })
         },
         staleTime: 5_000,
-        refetchInterval: 10_000, // Auto-refresh for live discussion
+        refetchInterval: 10_000,
         retry: 1,
     })
 }
 
 export function usePostComment() {
     const queryClient = useQueryClient()
-
     return useMutation({
-        mutationFn: async (data: {
-            election_id?: string
-            anon_id: string
-            content: string
-            parent_id?: string
-        }) => {
+        mutationFn: async (data: { election_id?: string; anon_id: string; content: string; parent_id?: string }) => {
             const res = await fetch('/api/comments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             })
             if (!res.ok) {
-                const err = await res.json()
+                const err = await res.json().catch(() => ({ error: 'Failed' }))
                 throw new Error(err.error || 'Failed to post comment')
             }
             return res.json()
         },
-        onSuccess: (_, variables) => {
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['comments'] })
         },
     })
@@ -133,7 +147,6 @@ export function usePostComment() {
 
 export function useToggleLike() {
     const queryClient = useQueryClient()
-
     return useMutation({
         mutationFn: async (data: { comment_id: string; anon_id: string }) => {
             const res = await fetch('/api/comments/like', {
@@ -142,7 +155,7 @@ export function useToggleLike() {
                 body: JSON.stringify(data),
             })
             if (!res.ok) {
-                const err = await res.json()
+                const err = await res.json().catch(() => ({ error: 'Failed' }))
                 throw new Error(err.error || 'Failed')
             }
             return res.json()
