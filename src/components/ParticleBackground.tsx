@@ -15,12 +15,14 @@ interface Particle {
 }
 
 const COLORS = [
-    'rgba(220, 38, 38, ',   // red
-    'rgba(37, 99, 235, ',   // blue
-    'rgba(16, 185, 129, ',  // green
-    'rgba(245, 158, 11, ',  // amber
-    'rgba(139, 92, 246, ',  // purple
+    'rgba(239, 68, 68, ',   // red
+    'rgba(59, 130, 246, ',  // blue
+    'rgba(34, 197, 94, ',   // green
+    'rgba(251, 191, 36, ',  // amber
+    'rgba(168, 85, 247, ',  // purple
     'rgba(6, 182, 212, ',   // cyan
+    'rgba(244, 114, 182, ', // pink
+    'rgba(250, 204, 21, ',  // yellow
 ]
 
 export default function ParticleBackground() {
@@ -44,19 +46,19 @@ export default function ParticleBackground() {
         window.addEventListener('resize', resize)
 
         // Create particles
-        const COUNT = 60
+        const COUNT = 80
         const particles: Particle[] = []
         for (let i = 0; i < COUNT; i++) {
             particles.push({
                 x: Math.random() * canvas.offsetWidth,
                 y: Math.random() * canvas.offsetHeight,
-                z: Math.random() * 600 + 100,
-                vx: (Math.random() - 0.5) * 0.4,
-                vy: (Math.random() - 0.5) * 0.3,
-                vz: (Math.random() - 0.5) * 0.8,
-                size: Math.random() * 4 + 1.5,
+                z: Math.random() * 500 + 50,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.4,
+                vz: (Math.random() - 0.5) * 1.0,
+                size: Math.random() * 5 + 2,
                 color: COLORS[Math.floor(Math.random() * COLORS.length)],
-                opacity: Math.random() * 0.5 + 0.2,
+                opacity: Math.random() * 0.6 + 0.3,
             })
         }
         particlesRef.current = particles
@@ -157,7 +159,7 @@ export default function ParticleBackground() {
         <canvas
             ref={canvasRef}
             className="absolute inset-0 w-full h-full pointer-events-auto"
-            style={{ opacity: 0.7 }}
+            style={{ opacity: 0.85 }}
         />
     )
 }

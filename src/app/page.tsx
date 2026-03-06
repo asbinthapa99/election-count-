@@ -290,15 +290,15 @@ export default function HomePage() {
     return (
         <div className="animate-fade-in">
             {/* ===== Countdown / Live Banner ===== */}
-            <section className="relative overflow-hidden border-b border-surface-200 dark:border-surface-800" style={{ minHeight: '340px' }}>
+            <section className="relative overflow-hidden border-b border-surface-200 dark:border-surface-800" style={{ minHeight: '380px', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}>
                 {/* 3D Particle Background */}
                 <ParticleBackground />
-                <div className="absolute inset-0 bg-gradient-to-b from-brand-500/5 to-transparent dark:from-brand-500/10" />
-                <div className="relative container-app py-12 md:py-16 text-center z-10">
-                    <p className="text-xs font-bold uppercase tracking-[0.3em] text-red-500 mb-4">
+                <div className="absolute inset-0 bg-gradient-to-b from-blue-900/20 to-transparent" />
+                <div className="relative container-app py-14 md:py-20 text-center z-10">
+                    <p className="text-xs font-bold uppercase tracking-[0.3em] text-red-400 mb-4">
                         🇳🇵 Nepal Election 2082
                     </p>
-                    <h2 className="text-3xl md:text-5xl font-black mb-2">
+                    <h2 className="text-3xl md:text-5xl font-black mb-2 text-white">
                         {isElectionStarted ? (
                             <span className="flex items-center justify-center gap-3">
                                 <span className="live-dot" /> LIVE COUNTING IN PROGRESS

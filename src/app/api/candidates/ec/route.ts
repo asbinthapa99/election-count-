@@ -40,6 +40,107 @@ const ERIS_URLS = [
     'https://result.election.gov.np/JSONFiles/ElectionResultCentral.txt',
 ]
 
+// ── NepalVotes.live R2 CDN fallback ──
+const NEPALVOTES_URL = 'https://pub-4173e04d0b78426caa8cfa525f827daa.r2.dev/constituencies.json'
+
+const PROVINCE_STATE_MAP: Record<string, number> = {
+    'Koshi': 1, 'Madhesh': 2, 'Bagmati': 3, 'Gandaki': 4,
+    'Lumbini': 5, 'Karnali': 6, 'Sudurpashchim': 7,
+}
+
+interface NVCandidate {
+    candidateId: number
+    name: string
+    nameNp: string
+    partyName: string
+    partyId: string
+    votes: number
+    gender: string
+    isWinner: boolean
+    fatherName?: string
+    spouseName?: string
+    qualification?: string
+    institution?: string
+    experience?: string
+    address?: string
+}
+
+interface NVConstituency {
+    province: string
+    district: string
+    districtNp: string
+    code: string
+    name: string
+    nameNp: string
+    status: string
+    lastUpdated: string
+    candidates: NVCandidate[]
+    votesCast: number
+    totalVoters: number
+}
+
+async function fetchFromNepalVotes(): Promise<ECCandidate[]> {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 12000)
+    try {
+        const res = await fetch(NEPALVOTES_URL, {
+            signal: controller.signal,
+            headers: { 'Accept': 'application/json' },
+            cache: 'no-store',
+        })
+        clearTimeout(timeout)
+        if (!res.ok) throw new Error(`NepalVotes R2 returned ${res.status}`)
+        const constituencies: NVConstituency[] = await res.json()
+        if (!Array.isArray(constituencies) || constituencies.length === 0) {
+            throw new Error('NepalVotes R2 returned empty data')
+        }
+
+        // Transform to ECCandidate format
+        const candidates: ECCandidate[] = []
+        for (const c of constituencies) {
+            // Extract constituency number from name like "Kathmandu-3" → 3
+            const constMatch = c.name.match(/-(\d+)$/)
+            const constNum = constMatch ? parseInt(constMatch[1]) : 0
+            const stateId = PROVINCE_STATE_MAP[c.province] || 0
+
+            for (const cand of c.candidates) {
+                candidates.push({
+                    CandidateID: cand.candidateId,
+                    CandidateName: cand.name || cand.nameNp,
+                    AGE_YR: 0,
+                    Gender: cand.gender === 'F' ? 'Female' : 'Male',
+                    PoliticalPartyName: cand.partyName,
+                    SYMBOLCODE: 0,
+                    SymbolName: '',
+                    CTZDIST: c.district,
+                    DistrictName: c.district,
+                    StateName: c.province,
+                    STATE_ID: stateId,
+                    SCConstID: constNum,
+                    ConstName: constNum,
+                    TotalVoteReceived: cand.votes || 0,
+                    R: 0,
+                    E_STATUS: c.status === 'COUNTING' ? 'Counting' : c.status === 'DECLARED' ? 'Declared' : null,
+                    DOB: 0,
+                    FATHER_NAME: cand.fatherName || '',
+                    SPOUCE_NAME: cand.spouseName || '',
+                    QUALIFICATION: cand.qualification || null,
+                    NAMEOFINST: cand.institution || null,
+                    EXPERIENCE: cand.experience || null,
+                    OTHERDETAILS: null,
+                    ADDRESS: cand.address || '',
+                })
+            }
+        }
+        console.log(`[NepalVotes] Loaded ${candidates.length} candidates from ${constituencies.length} constituencies`)
+        return candidates
+    } catch (err) {
+        clearTimeout(timeout)
+        console.warn('[NepalVotes] Failed to fetch:', err)
+        throw err
+    }
+}
+
 async function fetchFromEC(): Promise<ECCandidate[]> {
     for (const url of ERIS_URLS) {
         const controller = new AbortController()
@@ -87,7 +188,7 @@ async function getECData(): Promise<ECCandidate[]> {
     if (cachedData && age < CACHE_STALE_MAX) {
         if (!isRevalidating) {
             isRevalidating = true
-            fetchFromEC()
+            fetchBestData()
                 .then(data => {
                     cachedData = data
                     cacheTimestamp = Date.now()
@@ -100,15 +201,45 @@ async function getECData(): Promise<ECCandidate[]> {
 
     // No cache or expired — must fetch
     try {
-        const data = await fetchFromEC()
+        const data = await fetchBestData()
         cachedData = data
         cacheTimestamp = Date.now()
         return data
     } catch (err) {
-        console.error('[EC API] Fetch failed:', err)
+        console.error('[EC API] All sources failed:', err)
         if (cachedData) return cachedData // Return any stale data as last resort
         return []
     }
+}
+
+/** Try EC ERIS first; if it has zero votes, try NepalVotes.live for live counts */
+async function fetchBestData(): Promise<ECCandidate[]> {
+    // Try EC ERIS first (official source)
+    try {
+        const ecData = await fetchFromEC()
+        const hasVotes = ecData.some(c => c.TotalVoteReceived > 0)
+        if (hasVotes) {
+            console.log('[EC] Using official ERIS data (has vote counts)')
+            return ecData
+        }
+        console.log('[EC] ERIS data has no votes, trying NepalVotes.live...')
+    } catch (err) {
+        console.warn('[EC] ERIS fetch failed, trying NepalVotes.live...', err)
+    }
+
+    // Fallback to NepalVotes.live
+    try {
+        const nvData = await fetchFromNepalVotes()
+        if (nvData.length > 0) {
+            console.log('[NepalVotes] Using NepalVotes.live data as primary source')
+            return nvData
+        }
+    } catch (err) {
+        console.warn('[NepalVotes] NepalVotes.live fetch also failed:', err)
+    }
+
+    // Last resort: try EC ERIS again even with zero votes
+    return fetchFromEC()
 }
 
 // ── GET Handler ──
@@ -174,9 +305,10 @@ export async function GET(request: Request) {
     // Vote summary
     const totalVotes = allCandidates.reduce((sum, c) => sum + (c.TotalVoteReceived || 0), 0)
 
+    const hasNepalVotesData = allCandidates.some(c => c.E_STATUS === 'Counting' || c.E_STATUS === 'Declared')
     const response = NextResponse.json({
         status: 'ok',
-        source: 'result.election.gov.np',
+        source: hasNepalVotesData ? 'nepalvotes.live' : 'result.election.gov.np',
         timestamp: new Date().toISOString(),
         cacheAge: cachedData ? Date.now() - cacheTimestamp : 0,
         summary: {
