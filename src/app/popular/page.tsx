@@ -37,7 +37,7 @@ const POPULAR_CANDIDATES = [
         party: 'RSP',
         partyColor: '#6C63FF',
         constituencyEn: 'Chitwan-2',
-        photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Rabi_Lamichhane_2024.jpg/440px-Rabi_Lamichhane_2024.jpg',
+        photo: '',
         description: 'Former TV journalist turned RSP founder. Led Nepal\'s most dramatic political rise in 2022.',
         previousWins: 1,
     },
@@ -48,7 +48,7 @@ const POPULAR_CANDIDATES = [
         party: 'Nepali Congress',
         partyColor: '#006EB5',
         constituencyEn: 'Sarlahi-4',
-        photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Gagan_Thapa.jpg/440px-Gagan_Thapa.jpg',
+        photo: '',
         description: 'Youth leader of Nepali Congress and PM hopeful. Known for clean governance and anti-corruption stance.',
         previousWins: 3,
     },
@@ -59,7 +59,7 @@ const POPULAR_CANDIDATES = [
         party: 'CPN (Maoist Centre)',
         partyColor: '#8B1A1A',
         constituencyEn: 'Rukum East-1',
-        photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Pushpa_Kamal_Dahal.jpg/440px-Pushpa_Kamal_Dahal.jpg',
+        photo: '',
         description: 'Three-time PM and Maoist revolution founder. Defending his Rukum East stronghold.',
         previousWins: 5,
     },
@@ -285,17 +285,24 @@ export default function PopularCandidatesPage() {
                                         <div className="flex items-start gap-4 mb-4">
                                             <div className={`relative rounded-2xl overflow-hidden shrink-0 bg-gray-100 shadow-md ${isLeading ? 'w-24 h-24 ring-4 ring-yellow-400' : 'w-20 h-20'
                                                 }`}>
-                                                <Image
-                                                    src={candidate.photo}
-                                                    alt={candidate.nameEn}
-                                                    fill
-                                                    className="object-cover object-top"
-                                                    onError={(e) => {
-                                                        const img = e.target as HTMLImageElement
-                                                        img.style.display = 'none'
-                                                    }}
-                                                    unoptimized
-                                                />
+                                                {candidate.photo ? (
+                                                    <Image
+                                                        src={candidate.photo}
+                                                        alt={candidate.nameEn}
+                                                        fill
+                                                        className="object-cover object-top"
+                                                        onError={(e) => {
+                                                            const img = e.target as HTMLImageElement
+                                                            img.style.display = 'none'
+                                                        }}
+                                                        unoptimized
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-white"
+                                                        style={{ background: `linear-gradient(135deg, ${candidate.partyColor}, ${candidate.partyColor}88)` }}>
+                                                        {candidate.nameEn.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                                    </div>
+                                                )}
                                                 {isLeading && (
                                                     <div className="absolute -top-1 -right-1 text-lg">👑</div>
                                                 )}

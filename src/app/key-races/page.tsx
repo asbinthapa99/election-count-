@@ -76,12 +76,6 @@ const KNOWN_PHOTOS: Record<number, string> = {
     // Jhapa-5
     340111: '/images/candidates/kp-oli.jpg', // KP Oli
     339653: '/images/candidates/balen-shah.jpg', // Balen Shah
-    // Chitwan-2
-    340990: '/images/candidates/kp-oli.png', // Rabi Lamichhane (placeholder)
-    // Sarlahi-4
-    341549: '/images/candidates/kp-oli.png', // Gagan Thapa (placeholder)
-    // Rukum East-1
-    340050: '/images/candidates/kp-oli.png', // Prachanda (placeholder)
 }
 
 // Known English names for popular candidates
