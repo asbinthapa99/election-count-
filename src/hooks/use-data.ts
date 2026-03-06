@@ -62,14 +62,33 @@ export function useConstituencies(params?: { province?: string; district?: strin
     })
 }
 
-// --- Scraper / Live Data ---
+// --- Scraper / Live Data (multi-source aggregator) ---
 export function useLiveData() {
     return useQuery<any>({
         queryKey: ['live-data'],
-        queryFn: () => safeFetch('/api/scraper', { status: 'waiting', parties: [] as any[], totalConstituencies: 0, countedConstituencies: 0 }),
-        staleTime: 30_000,
-        refetchInterval: 60_000,
+        queryFn: () => safeFetch('/api/scraper', { status: 'waiting', sources: [], nepalVotes: null, onlineKhabar: null, electionCommission: null }),
+        staleTime: 15_000,
+        refetchInterval: 30_000,
         retry: 1,
+    })
+}
+
+// --- EC Candidates (direct live data) ---
+export function useECCandidates(params?: { district?: string; province?: string; party?: string; search?: string; page?: number; limit?: number }) {
+    const p = new URLSearchParams()
+    if (params?.district) p.set('district', params.district)
+    if (params?.province) p.set('state', params.province)
+    if (params?.party) p.set('party', params.party)
+    if (params?.search) p.set('search', params.search)
+    if (params?.page) p.set('page', String(params.page))
+    p.set('limit', String(params?.limit || 50))
+
+    return useQuery<any>({
+        queryKey: ['ec-candidates', params],
+        queryFn: () => safeFetch(`/api/candidates/ec?${p}`, { status: 'unavailable', candidates: [], summary: {} }),
+        staleTime: 15_000,
+        refetchInterval: 30_000,
+        retry: 2,
     })
 }
 

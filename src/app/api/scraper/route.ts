@@ -1,7 +1,30 @@
-import { createServerClient } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 
-// Safe fetch with timeout and error handling
+// ── Multiple data source fetcher ──
+// Aggregates live election data from multiple Nepali news/election portals
+
+interface OnlineKhabarParty {
+    party_id: number
+    party_name: string
+    party_nickname: string
+    party_slug: string
+    party_image: string
+    party_color: string
+    party_order: number
+    leading_count: number
+    winner_count: number
+    total_seat: number
+}
+
+interface DataSourceResult {
+    name: string
+    status: 'available' | 'unavailable'
+    timestamp: string
+    message?: string
+    data?: unknown
+}
+
+// Safe fetch with timeout
 async function safeFetch(url: string, timeoutMs = 8000) {
     try {
         const controller = new AbortController()
@@ -9,7 +32,7 @@ async function safeFetch(url: string, timeoutMs = 8000) {
         const res = await fetch(url, {
             signal: controller.signal,
             headers: { 'Accept': 'application/json, text/plain, */*' },
-            next: { revalidate: 60 }, // Cache for 60s
+            cache: 'no-store',
         })
         clearTimeout(timeout)
         if (!res.ok) return null
@@ -20,106 +43,116 @@ async function safeFetch(url: string, timeoutMs = 8000) {
     }
 }
 
-// Data sources (ordered by priority — if one fails, try next)
-const DATA_SOURCES = [
-    {
-        name: 'Election Commission Nepal (Official)',
-        url: 'https://result.election.gov.np/JSONFiles/ElectionResultCentral2082.txt',
-        type: 'json',
-    },
-    {
-        name: 'NepalVotes.live',
-        url: 'https://nepalvotes.live/api/results',
-        type: 'json',
-    },
-    {
-        name: 'Ekantipur Election Portal',
-        url: 'https://election.ekantipur.com/api/competitivearea',
-        type: 'html',
-    },
-]
+// ── In-memory cache ──
+let cachedResponse: Record<string, unknown> | null = null
+let cacheTime = 0
+const CACHE_TTL = 30_000 // 30s
 
-// GET: Scrape/fetch from Election Commission Nepal + Ekantipur and update database
-// Called periodically by client-side polling every 60 seconds
 export async function GET() {
-    try {
-        const supabase = createServerClient()
-        const results: Record<string, unknown> = {}
-        let primaryData = null
-
-        // Try each data source in priority order
-        for (const source of DATA_SOURCES) {
-            const data = await safeFetch(source.url)
-            if (data) {
-                results[source.name] = {
-                    status: 'available',
-                    timestamp: new Date().toISOString(),
-                }
-
-                // Store snapshot in database
-                try {
-                    await supabase.from('results_snapshots').insert({
-                        provider: source.name,
-                        payload_json: typeof data === 'object' ? data : { raw: data },
-                    })
-                } catch { /* Ignore insert errors */ }
-
-                if (!primaryData) primaryData = data // Use first successful source
-            } else {
-                results[source.name] = {
-                    status: 'unavailable',
-                    message: 'Source not responding or counting not started',
-                }
-            }
-        }
-
-        // If we got election data, parse it
-        if (primaryData && Array.isArray(primaryData)) {
-            // This is likely the EC Nepal JSON — array of candidates
-            const totalCandidates = primaryData.length
-            const parties = new Set(primaryData.map((c: Record<string, string>) => c.PARTY_NAME_ENG || c.party))
-            const districts = new Set(primaryData.map((c: Record<string, string>) => c.DISTRICT_NAME_ENG || c.district))
-
-            return NextResponse.json({
-                status: 'data_available',
-                message: 'Real election data fetched successfully',
-                sources: results,
-                timestamp: new Date().toISOString(),
-                summary: {
-                    totalCandidates,
-                    totalParties: parties.size,
-                    totalDistricts: districts.size,
-                },
-                // Return first 50 candidates as sample
-                sampleCandidates: primaryData.slice(0, 50),
-            })
-        }
-
-        // Fallback: Return DB state
-        const { data: parties } = await supabase
-            .from('parties')
-            .select('*')
-            .order('seats', { ascending: false })
-
-        const { count: totalConstituencies } = await supabase
-            .from('constituencies')
-            .select('*', { count: 'exact', head: true })
-
-        return NextResponse.json({
-            status: 'waiting',
-            message: 'Election counting has not started yet. Live results will appear here automatically on election day (Falgun 21, 2082 / March 5, 2026).',
-            sources: results,
-            timestamp: new Date().toISOString(),
-            parties: parties || [],
-            totalConstituencies: totalConstituencies || 0,
-            nextElection: '2026-03-05T06:00:00+05:45',
-        })
-    } catch (err) {
-        console.error('Scraper error:', err)
-        return NextResponse.json({
-            status: 'error',
-            message: 'Unable to fetch election data. Will retry automatically.',
-            timestamp: new Date().toISOString(),
+    const now = Date.now()
+    if (cachedResponse && (now - cacheTime) < CACHE_TTL) {
+        return NextResponse.json(cachedResponse, {
+            headers: { 'Cache-Control': 'public, max-age=15, stale-while-revalidate=30' },
         })
     }
+
+    const sources: DataSourceResult[] = []
+
+    // 1. NepalVotes.live R2 CDN — per-candidate vote data
+    let nepalVotesData = null
+    try {
+        const nvData = await safeFetch('https://pub-4173e04d0b78426caa8cfa525f827daa.r2.dev/constituencies.json', 10000)
+        if (nvData && Array.isArray(nvData) && nvData.length > 0) {
+            const counting = nvData.filter((c: { status: string }) => c.status === 'COUNTING' || c.status === 'DECLARED')
+            const totalVotes = nvData.reduce((sum: number, c: { votesCast?: number }) => sum + (c.votesCast || 0), 0)
+            nepalVotesData = {
+                totalConstituencies: nvData.length,
+                countingConstituencies: counting.length,
+                totalVotes,
+                constituencies: nvData,
+            }
+            sources.push({
+                name: 'NepalVotes.live',
+                status: 'available',
+                timestamp: new Date().toISOString(),
+            })
+        } else {
+            sources.push({ name: 'NepalVotes.live', status: 'unavailable', timestamp: new Date().toISOString(), message: 'No data' })
+        }
+    } catch {
+        sources.push({ name: 'NepalVotes.live', status: 'unavailable', timestamp: new Date().toISOString(), message: 'Fetch failed' })
+    }
+
+    // 2. OnlineKhabar — party seat counts (leading/winner)
+    let onlineKhabarData = null
+    try {
+        const okData = await safeFetch('https://election.onlinekhabar.com/wp-json/okelapi/v1/2082/home/election-results?limit=200')
+        if (okData?.data?.party_results && Array.isArray(okData.data.party_results)) {
+            const parties: OnlineKhabarParty[] = okData.data.party_results
+            const withSeats = parties.filter(p => p.leading_count > 0 || p.winner_count > 0)
+            const totalLeading = parties.reduce((s, p) => s + p.leading_count, 0)
+            const totalWinners = parties.reduce((s, p) => s + p.winner_count, 0)
+            onlineKhabarData = {
+                totalParties: parties.length,
+                partiesWithSeats: withSeats.length,
+                totalLeading,
+                totalWinners,
+                parties: withSeats.map(p => ({
+                    name: p.party_name,
+                    nickname: p.party_nickname,
+                    slug: p.party_slug,
+                    color: p.party_color,
+                    image: p.party_image,
+                    leading: p.leading_count,
+                    won: p.winner_count,
+                    totalSeats: p.total_seat,
+                })),
+            }
+            sources.push({
+                name: 'OnlineKhabar',
+                status: 'available',
+                timestamp: new Date().toISOString(),
+            })
+        } else {
+            sources.push({ name: 'OnlineKhabar', status: 'unavailable', timestamp: new Date().toISOString(), message: 'No data' })
+        }
+    } catch {
+        sources.push({ name: 'OnlineKhabar', status: 'unavailable', timestamp: new Date().toISOString(), message: 'Fetch failed' })
+    }
+
+    // 3. Election Commission Nepal
+    let ecData = null
+    try {
+        const ec = await safeFetch('https://result.election.gov.np/JSONFiles/ElectionResultCentral2082.txt', 10000)
+        if (ec && Array.isArray(ec) && ec.length > 0) {
+            const totalVotes = ec.reduce((s: number, c: { TotalVoteReceived?: number }) => s + (c.TotalVoteReceived || 0), 0)
+            ecData = {
+                totalCandidates: ec.length,
+                totalVotes,
+                hasVotes: totalVotes > 0,
+            }
+            sources.push({ name: 'Election Commission Nepal', status: 'available', timestamp: new Date().toISOString() })
+        } else {
+            sources.push({ name: 'Election Commission Nepal', status: 'unavailable', timestamp: new Date().toISOString(), message: 'No data or counting not started' })
+        }
+    } catch {
+        sources.push({ name: 'Election Commission Nepal', status: 'unavailable', timestamp: new Date().toISOString(), message: 'Fetch failed' })
+    }
+
+    const response = {
+        status: 'data_available',
+        message: `Live election data from ${sources.filter(s => s.status === 'available').length} of ${sources.length} sources`,
+        timestamp: new Date().toISOString(),
+        sources,
+        nepalVotes: nepalVotesData,
+        onlineKhabar: onlineKhabarData,
+        electionCommission: ecData,
+    }
+
+    cachedResponse = response
+    cacheTime = Date.now()
+
+    return NextResponse.json(response, {
+        headers: { 'Cache-Control': 'public, max-age=15, stale-while-revalidate=30' },
+    })
 }
