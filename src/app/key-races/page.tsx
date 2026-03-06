@@ -203,9 +203,9 @@ export default function KeyRacesPage() {
                 const grouped: Record<number, ECCandidate[]> = {}
 
                 for (const race of TRACKED_RACES) {
-                    // Match by EXACT district name and constituency number
+                    // Match by district name (supports both Nepali EC data and English NepalVotes data)
                     let raceCandidates = allCandidates.filter(
-                        c => c.DistrictName === race.districtName && c.ConstName === race.constNumber
+                        c => (c.DistrictName === race.districtName || c.DistrictName === race.district) && c.ConstName === race.constNumber
                     )
 
                     // Inject fallback candidates if missing (e.g. Aashika Tamang in Dhading-1)
@@ -555,11 +555,15 @@ export default function KeyRacesPage() {
                 <div className="mt-8 bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3">
                     <Zap className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                     <div className="text-sm text-blue-800">
-                        <strong>Live Data:</strong> All {Object.values(raceData).reduce((s, r) => s + r.length, 0)} candidates and vote counts pulled directly from{' '}
+                        <strong>Live Data:</strong> All {Object.values(raceData).reduce((s, r) => s + r.length, 0)} candidates and vote counts pulled from{' '}
+                        <a href="https://nepalvotes.live" target="_blank" rel="noopener noreferrer" className="underline font-medium">
+                            nepalvotes.live
+                        </a>
+                        {' '}and{' '}
                         <a href="https://result.election.gov.np" target="_blank" rel="noopener noreferrer" className="underline font-medium">
                             result.election.gov.np
                         </a>
-                        {' '}(official Election Commission Nepal). Data refreshes every 30 seconds. Vote shares calculated from actual TotalVoteReceived.
+                        . Data refreshes every 30 seconds.
                     </div>
                 </div>
             </div>
@@ -600,7 +604,7 @@ function CandidateCard({ candidate, totalVotes, votingStarted, isLeading }: {
                 {partyAbbr}
             </div>
             <p className="text-gray-400 text-xs mb-3">
-                {candidate.Gender === 'पुरुष' ? '♂' : '♀'} {candidate.AGE_YR} yrs · {candidate.SymbolName}
+                {(candidate.Gender === 'पुरुष' || candidate.Gender === 'Male') ? '♂' : '♀'}{candidate.AGE_YR > 0 ? ` ${candidate.AGE_YR} yrs ·` : ''} {candidate.SymbolName}
             </p>
             <div className="flex items-center justify-center gap-1.5">
                 {votingStarted ? (

@@ -198,7 +198,7 @@ export default function PopularCandidatesPage() {
                 <div className="container-app py-16 text-center">
                     <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur rounded-full px-4 py-1.5 text-sm font-medium mb-4">
                         <span className={`w-2 h-2 rounded-full ${isPolling ? 'bg-yellow-400 animate-pulse' : 'bg-green-400 animate-pulse'}`} />
-                        Live from result.election.gov.np · Auto-refreshes every 30s
+                        Live from nepalvotes.live & OnlineKhabar · Auto-refreshes every 30s
                     </div>
                     <h1 className="text-4xl md:text-5xl font-bold mb-3">Popular Candidates</h1>
                     <p className="text-white/80 text-lg max-w-2xl mx-auto">
@@ -314,8 +314,8 @@ export default function PopularCandidatesPage() {
                                                     </div>
                                                     {votingStarted ? (
                                                         <span className={`shrink-0 text-xs px-2.5 py-1 rounded-full font-semibold ${candidate.rank === 1 ? 'bg-green-100 text-green-700' :
-                                                                candidate.rank === 2 ? 'bg-yellow-100 text-yellow-700' :
-                                                                    'bg-gray-100 text-gray-600'
+                                                            candidate.rank === 2 ? 'bg-yellow-100 text-yellow-700' :
+                                                                'bg-gray-100 text-gray-600'
                                                             }`}>
                                                             #{candidate.rank} of {candidate.totalCandidatesInConst}
                                                         </span>
@@ -401,7 +401,7 @@ export default function PopularCandidatesPage() {
                                                 <Trophy className="w-3.5 h-3.5" />
                                                 <span>{candidate.previousWins} prev. wins</span>
                                                 <span className="mx-1.5">·</span>
-                                                <span>{candidate.gender === 'पुरुष' ? '♂' : '♀'} Age {candidate.age}</span>
+                                                <span>{(candidate.gender === 'पुरुष' || candidate.gender === 'Male') ? '♂' : '♀'}{candidate.age > 0 ? ` Age ${candidate.age}` : ''}</span>
                                             </div>
                                             <a
                                                 href="https://result.election.gov.np"
@@ -433,11 +433,15 @@ export default function PopularCandidatesPage() {
 
                 {/* Disclaimer */}
                 <div className="mt-8 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800">
-                    <strong>ℹ️ Live Data:</strong> All vote counts fetched directly from{' '}
-                    <a href="https://result.election.gov.np" target="_blank" rel="noopener noreferrer" className="underline font-medium">
-                        result.election.gov.np
+                    <strong>ℹ️ Live Data:</strong> Vote counts from{' '}
+                    <a href="https://nepalvotes.live" target="_blank" rel="noopener noreferrer" className="underline font-medium">
+                        nepalvotes.live
                     </a>
-                    {' '}(official Election Commission Nepal). Auto-refreshes every 30 seconds. Vote shares calculated from actual TotalVoteReceived.
+                    {' '}·{' '}
+                    <a href="https://result.election.gov.np" target="_blank" rel="noopener noreferrer" className="underline font-medium">
+                        EC Nepal
+                    </a>
+                    . Auto-refreshes every 30 seconds.
                     {!votingStarted && (
                         <>
                             <br /><br />

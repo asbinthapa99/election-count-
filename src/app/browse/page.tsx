@@ -151,7 +151,7 @@ export default function BrowseCandidatesPage() {
                             <div>
                                 <h1 className="text-lg font-bold text-gray-900">सबै उम्मेदवारहरू</h1>
                                 <p className="text-xs text-gray-500">
-                                    Source: result.election.gov.np • प्रतिनिधि सभा निर्वाचन २०८२
+                                    Source: nepalvotes.live & EC Nepal • प्रतिनिधि सभा निर्वाचन २०८२
                                 </p>
                             </div>
                         </div>
@@ -385,7 +385,7 @@ export default function BrowseCandidatesPage() {
                                                         {partyAbbr}
                                                     </span>
                                                     <span className="text-xs text-gray-500">
-                                                        {candidate.Gender === 'पुरुष' ? '♂' : '♀'} {candidate.AGE_YR} yrs
+                                                        {(candidate.Gender === 'पुरुष' || candidate.Gender === 'Male') ? '♂' : '♀'}{candidate.AGE_YR > 0 ? ` ${candidate.AGE_YR} yrs` : ''}
                                                     </span>
                                                 </div>
                                             </div>
@@ -487,7 +487,7 @@ export default function BrowseCandidatesPage() {
 
                 {/* Source attribution */}
                 <div className="mt-8 text-center text-xs text-gray-400">
-                    <p>Data sourced from <a href="https://result.election.gov.np" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">result.election.gov.np</a></p>
+                    <p>Data sourced from <a href="https://nepalvotes.live" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">nepalvotes.live</a> & <a href="https://result.election.gov.np" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">EC Nepal</a></p>
                     <p className="mt-1">निर्वाचन आयोग नेपाल • Election Commission Nepal • Last updated: {data?.timestamp || 'N/A'}</p>
                 </div>
             </div>
