@@ -250,7 +250,7 @@ export const sampleCandidates = [
         abbreviation: 'UML',
         color: '#2563eb',
         constituency: 'Jhapa-5',
-        role: 'Current Prime Minister',
+        role: 'Former Prime Minister',
         status: 'contesting',
         symbol: '☀️',
     },
@@ -386,9 +386,9 @@ export const provinces = [
 ]
 
 export const pmHistory = [
-    { name: 'KP Sharma Oli', party: 'UML', term: '2024-present', color: '#2563eb' },
+    { name: 'Balen Shah', party: 'RSP', term: '2026-present', color: '#7c3aed' },
+    { name: 'KP Sharma Oli', party: 'UML', term: '2024-2026', color: '#2563eb' },
     { name: 'Pushpa Kamal Dahal', party: 'MC', term: '2022-2024', color: '#ea580c' },
-    { name: 'Gagan Thapa', party: 'NC', term: 'NC Leader', color: '#dc2626' },
     { name: 'KP Sharma Oli', party: 'UML', term: '2018-2021', color: '#2563eb' },
 ]
 

@@ -299,13 +299,9 @@ export default function HomePage() {
                         🇳🇵 Nepal Election 2082
                     </p>
                     <h2 className="text-3xl md:text-5xl font-black mb-2 text-white">
-                        {isElectionStarted ? (
-                            <span className="flex items-center justify-center gap-3">
-                                <span className="live-dot" /> LIVE COUNTING IN PROGRESS
-                            </span>
-                        ) : (
-                            'ELECTION COUNTDOWN'
-                        )}
+                        <span className="flex items-center justify-center gap-3">
+                            <span className="live-dot" /> RSP HAS WON! 🏆
+                        </span>
                     </h2>
 
                     {!isElectionStarted && (
@@ -359,7 +355,7 @@ export default function HomePage() {
 
                             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.1] mb-6">
                                 The Future of Nepal{' '}
-                                <span className="gradient-text">Decided Today.</span>
+                                <span className="gradient-text">RSP SECURES MAJORITY.</span>
                             </h1>
 
                             <p className="text-surface-300 text-lg leading-relaxed mb-8 max-w-lg">
@@ -554,7 +550,7 @@ export default function HomePage() {
                                     <h2 className="text-2xl font-black">KINGMAKER SIMULATOR</h2>
                                 </div>
                                 <p className="text-surface-400 uppercase tracking-wider text-xs mb-6">
-                                    Who becomes Prime Minister? Select parties to find the {MAJORITY_SEATS}-seat majority.
+                                    Balen Shah is the new Prime Minister! RSP secures the {MAJORITY_SEATS}-seat majority.
                                 </p>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     {partiesWithSeats.map(party => (

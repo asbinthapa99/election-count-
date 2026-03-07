@@ -14,7 +14,7 @@ const TRACKED_RACES = [
         constituencyEn: 'Jhapa-5',
         district: 'Jhapa',
         province: 'Koshi Province',
-        description: 'Battle of the Titans — Former PM KP Oli vs. Mayor Balen Shah',
+        description: 'Battle of the Titans — Former PM KP Oli vs. Upcoming PM Mayor Balen Shah (RSP Won)',
         importance: 'Prime Minister race',
         importance_level: 'critical' as const,
         pinnedMatchup: [340111, 339653], // KP Oli vs Balen Shah
